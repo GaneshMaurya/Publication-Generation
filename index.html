@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Researcher Publications Project</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
 
     <body>
         <div class="container">
@@ -29,6 +31,10 @@
                 </div>
                 <div class="filter-group">
                     <label for="sortBy">Sort by:</label>
+                    <select id="sortBy">
+                        <option value="year">Year</option>
+                        <option value="title">Title</option>
+                    </select>
                     <select id="sortOrder">
                         <option value="desc">Descending</option>
                         <option value="asc">Ascending</option>
@@ -37,8 +43,8 @@
             </div>
     
             <div id="loadingIndicator" class="loading">Loading publications...</div>
+            
         </div>
         </body>
-    </head>
     </html>
 
