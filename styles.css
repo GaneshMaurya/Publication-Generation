@@ -1,72 +1,92 @@
-
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
-    padding: 20px;
-    background-color: #f0f0f0;
+    padding: 0;
+    background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+    color: #333;
 }
 
 .container {
-    max-width: 800px;
-    margin: 0 auto;
+    max-width: 900px;
+    margin: 50px auto;
+    padding: 30px;
     background-color: #fff;
-    padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    box-shadow: 0 20px 30px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
 }
+
+.container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 30px 40px rgba(0, 0, 0, 0.2);
+}
+
 
 h1 {
     text-align: center;
-    color: #333;
+    font-size: 2.5rem;
+    color: #007bff;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 30px;
+    position: relative;
+}
+
+h1::after {
+    content: '';
+    display: block;
+    width: 50px;
+    height: 3px;
+    background-color: #007bff;
+    margin: 15px auto 0;
+    border-radius: 5px;
 }
 
 .search-container {
     display: flex;
-    gap: 10px;
     justify-content: center;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
+    position: relative;
 }
 
 #authorName {
-    padding: 10px;
-    width: 70%;
+    padding: 15px;
+    width: 75%;
     border: 1px solid #ddd;
-    border-radius: 5px;
+    border-radius: 50px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+#authorName:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
 }
 
 #fetchPublications {
-    padding: 10px 20px;
-    background-color: #007bff;
+    padding: 12px 30px;
+    background: linear-gradient(45deg, #007bff, #0056b3);
     color: #fff;
     border: none;
-    border-radius: 5px;
+    border-radius: 50px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 #fetchPublications:hover {
-    background-color: #0056b3;
+    background: linear-gradient(45deg, #0056b3, #003f8f);
+    box-shadow: 0 4px 15px rgba(0, 0, 123, 0.3);
+    transform: translateY(-3px);
 }
 
-.filter-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    margin-bottom: 20px;
-    padding: 15px;
-    background-color: #f8f9fa;
-    border-radius: 5px;
-}
-
-.filter-group {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-select, input {
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
+.loading {
+    text-align: center;
+    padding: 30px;
+    font-size: 1.5rem;
+    display: none;
+    color: #007bff;
 }
