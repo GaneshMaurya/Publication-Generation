@@ -90,3 +90,70 @@ h1::after {
     display: none;
     color: #007bff;
 }
+
+.filter-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+}
+
+.filter-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+select, input {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+select:focus, input:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+.publication-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.publication-item {
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 15px;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+.publication-item:hover {
+    background-color: #f1f3f5;
+    transform: translateY(-5px);
+}
+
+.group-header {
+    background-color: #007bff;
+    color: #fff;
+    padding: 15px;
+    font-weight: bold;
+    border-radius: 6px;
+    margin-top: 30px;
+    box-shadow: 0 5px 15px rgba(0, 0, 123, 0.1);
+}
+
+.error-message {
+    color: #dc3545;
+    text-align: center;
+    font-size: 1.2rem;
+    padding: 20px;
+    display: none;
+}
