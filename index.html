@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Researcher Publications</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Research Publications</h1>
+
+        <div class="search-container">
+            <input type="text" id="authorName" placeholder="Enter Researcher Name" aria-label="Researcher name" />
+            <button id="fetchPublications">Search</button>
+        </div>
+
+        <div class="filter-container">
+            <div class="filter-group">
+                <label for="groupBy">Group by:</label>
+                <select id="groupBy">
+                    <option value="year">Year</option>
+                    <option value="type">Type</option>
+                    <option value="author">Author</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="sortBy">Sort by:</label>
+                <select id="sortBy">
+                    <option value="year">Year</option>
+                    <option value="title">Title</option>
+
+                </select>
+                <select id="sortOrder">
+                    <option value="desc">Descending</option>
+                    <option value="asc">Ascending</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="loadingIndicator" class="loading">Loading publications...</div>
+        <div id="errorMessage" class="error-message"></div>
+        <div id="publicationList" class="publication-list"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>
