@@ -29,6 +29,17 @@
             </div>
 
             <div class="filter-group">
+                <label for="filterYear">Year:</label>
+                <input 
+                    type="number" 
+                    id="filterYear" 
+                    placeholder="Filter by Year"
+                    min="1900"
+                    max="2024"
+                />
+            </div>
+
+            <div class="filter-group">
                 <label for="sortBy">Sort by:</label>
                 <select id="sortBy">
                     <option value="year">Year</option>
@@ -45,6 +56,7 @@
         <div id="loadingIndicator" class="loading">Loading publications...</div>
         <div id="errorMessage" class="error-message"></div>
         <div id="publicationList" class="publication-list"></div>
+        <div id="pagination" class="pagination"></div>
     </div>
     <script src="script.js"></script>
 </body>

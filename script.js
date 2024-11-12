@@ -182,6 +182,69 @@ class PublicationManager {
         `;
         return item;
     }
+    
+    setupPagination() {
+        const pagination = document.getElementById('pagination');
+        pagination.innerHTML = '';
+
+        const totalPages = Math.ceil(this.filteredPublications.length / this.itemsPerPage);
+        
+        if (totalPages <= 1) return;
+
+        this.addPaginationButton(pagination, '«', this.currentPage > 1, () => {
+            this.currentPage = 1;
+            this.updateDisplay();
+        });
+
+        this.addPaginationButton(pagination, '‹', this.currentPage > 1, () => {
+            this.currentPage--;
+            this.updateDisplay();
+        });
+
+        for (let i = 1; i <= totalPages; i++) {
+            if (this.shouldShowPageNumber(i, totalPages)) {
+                this.addPaginationButton(pagination, i.toString(), true, () => {
+                    this.currentPage = i;
+                    this.updateDisplay();
+                }, i === this.currentPage);
+            } else if (this.shouldShowEllipsis(i, totalPages)) {
+                const span = document.createElement('span');
+                span.textContent = '...';
+                pagination.appendChild(span);
+            }
+        }
+
+        this.addPaginationButton(pagination, '›', this.currentPage < totalPages, () => {
+            this.currentPage++;
+            this.updateDisplay();
+        });
+
+        this.addPaginationButton(pagination, '»', this.currentPage < totalPages, () => {
+            this.currentPage = totalPages;
+            this.updateDisplay();
+        });
+    }
+
+    shouldShowPageNumber(page, totalPages) {
+        return page === 1 || page === totalPages || 
+               (page >= this.currentPage - 1 && page <= this.currentPage + 1);
+    }
+
+    shouldShowEllipsis(page, totalPages) {
+        return (page === 2 && this.currentPage > 4) || 
+               (page === totalPages - 1 && this.currentPage < totalPages - 3);
+    }
+
+    addPaginationButton(container, text, enabled, onClick, isActive = false) {
+        const button = document.createElement('button');
+        button.textContent = text;
+        button.disabled = !enabled;
+        if (isActive) button.classList.add('active');
+        if (enabled) {
+            button.addEventListener('click', onClick);
+        }
+        container.appendChild(button);
+    }
 
     showLoading(show) {
         const loader = document.getElementById('loadingIndicator');
