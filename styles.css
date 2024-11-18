@@ -157,3 +157,9 @@ select:focus, input:focus {
     padding: 20px;
     display: none;
 }
+
+.highlight {
+    background-color: rgba(0, 119, 255, 0.411);
+    text-decoration: underline;
+    color: black;
+}

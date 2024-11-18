@@ -171,10 +171,15 @@ class PublicationManager {
 
     createPublicationItem(pub) {
         const item = document.createElement('div');
+        const highlightedTitle = this.highlightSearch(pub.title)
+        const highlightedAuthors = this.highlightSearch(pub.authors.join(', '))
+
         item.className = 'publication-item';
+        
+
         item.innerHTML = `
-            <h3>${pub.title}</h3>
-            <p><strong>Authors:</strong> ${pub.authors.join(', ')}</p>
+            <h3>${highlightedTitle}</h3>
+            <p><strong>Authors:</strong> ${highlightedAuthors}</p>
             <p><strong>Year:</strong> ${pub.year || 'N/A'}</p>
             <p><strong>Type:</strong> ${this.formatPublicationType(pub.type)}</p>
             ${pub.venue ? `<p><strong>Venue:</strong> ${pub.venue}</p>` : ''}
@@ -183,6 +188,15 @@ class PublicationManager {
         return item;
     }
     
+    highlightSearch(content) {
+        const queryString = document.getElementById('authorName').value.trim();
+        const queryWords = queryString.split(/\s+/);
+        console.info(queryWords)
+        const regex = new RegExp(`(${queryWords.join('|')})`, 'gi');
+        const highlightedText = content.replace(regex, '<span class="highlight">$1</span>');
+        return highlightedText
+    }
+
     setupPagination() {
         const pagination = document.getElementById('pagination');
         pagination.innerHTML = '';
