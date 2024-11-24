@@ -159,7 +159,8 @@ select:focus, input:focus {
 }
 
 .highlight {
-    background-color: rgba(0, 119, 255, 0.411);
+    font-weight: bold;
+    font-style: italic;
     text-decoration: underline;
-    color: black;
+    color:darkblue;
 }

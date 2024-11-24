@@ -171,14 +171,12 @@ class PublicationManager {
 
     createPublicationItem(pub) {
         const item = document.createElement('div');
-        const highlightedTitle = this.highlightSearch(pub.title)
         const highlightedAuthors = this.highlightSearch(pub.authors.join(', '))
 
         item.className = 'publication-item';
         
-
         item.innerHTML = `
-            <h3>${highlightedTitle}</h3>
+            <h3>${pub.title}</h3>
             <p><strong>Authors:</strong> ${highlightedAuthors}</p>
             <p><strong>Year:</strong> ${pub.year || 'N/A'}</p>
             <p><strong>Type:</strong> ${this.formatPublicationType(pub.type)}</p>
@@ -191,8 +189,7 @@ class PublicationManager {
     highlightSearch(content) {
         const queryString = document.getElementById('authorName').value.trim();
         const queryWords = queryString.split(/\s+/);
-        console.info(queryWords)
-        const regex = new RegExp(`(${queryWords.join('|')})`, 'gi');
+        const regex = new RegExp(`\\b(${queryWords.join('|')})\\b`, 'gi');
         const highlightedText = content.replace(regex, '<span class="highlight">$1</span>');
         return highlightedText
     }
