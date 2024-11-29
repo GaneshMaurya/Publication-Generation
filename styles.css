@@ -235,3 +235,31 @@ canvas#publicationsChart {
 .active {
     background-color: lightblue;
 }
+
+#exportButton {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* Hover effect */
+#exportButton:hover {
+    background-color: #0056b3;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+#exportButton:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.5);
+}
+
+#exportButton:active {
+    background-color: #004085;
+    transform: scale(0.98);
+}

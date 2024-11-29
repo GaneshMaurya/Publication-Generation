@@ -20,7 +20,7 @@ class PublicationManager {
         });
         document.getElementById('exportButton').addEventListener('click', () => {
             const exportType = document.getElementById('exportDropdown').value;
-        
+
             if (exportType === 'pdf') {
                 this.exportToPDF();
             } else if (exportType === 'bib') {
@@ -563,17 +563,17 @@ class PublicationManager {
         try {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-    
+
             let y = 10;
             let currentGroup = '';
-    
+
             this.filteredPublications.forEach(pub => {
                 if (pub.isGroupHeader) {
                     currentGroup = pub.value;
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(12);
                     doc.text(currentGroup, 10, y);
-                    y += 10; 
+                    y += 10;
                 } else {
                     doc.setFont('helvetica', 'normal');
                     doc.setFontSize(10);
@@ -592,19 +592,19 @@ class PublicationManager {
                         doc.text(`Venue: ${pub.venue}`, 10, y);
                         y += 6;
                     }
-    
+
                     if (pub.doi) {
                         const doiURL = `https://doi.org/${pub.doi}`;
-                        doc.setTextColor(0, 0, 255); 
+                        doc.setTextColor(0, 0, 255);
                         doc.textWithLink(`DOI: ${pub.doi}`, 10, y, { url: doiURL });
                         doc.setTextColor(0, 0, 0);
-                        y += 10; 
+                        y += 10;
                     }
-    
-                    y += 4; 
+
+                    y += 4;
                     if (y > 270) {
                         doc.addPage();
-                        y = 10; 
+                        y = 10;
                     }
                 }
             });
@@ -615,6 +615,81 @@ class PublicationManager {
         }
     }
 
+    exportToBib() {
+        try {
+            let bibContent = ''; // To hold the .bib file content
+
+            this.filteredPublications.forEach(pub => {
+                // Determine entry type (defaulting to 'article')
+                //  const entryType = pub.type === 'article' ? 'article' : 'misc';
+                const entryType = 'article'
+
+                // Safely generate an ID for the BibTeX entry
+                const id = pub.doi
+                    ? pub.doi.split('/').pop()
+                    : pub.title
+                        ? pub.title.replace(/\s+/g, '_').toLowerCase()
+                        : `entry_${Math.random().toString(36).substr(2, 8)}`;
+
+                // Build the BibTeX entry
+                let bibEntry = `@${entryType}{DBLP:${id},\n`;
+                if (pub.authors && pub.authors.length > 0) {
+                    bibEntry += `  author       = {${pub.authors.join(' and ')}},\n`;
+                }
+                if (pub.title) {
+                    bibEntry += `  title        = {${pub.title}},\n`;
+                }
+                if (pub.venue) {
+                    bibEntry += `  journal      = {${pub.venue}},\n`;
+                }
+                if (pub.volume) {
+                    bibEntry += `  volume       = {${pub.volume}},\n`;
+                }
+                if (pub.year) {
+                    bibEntry += `  year         = {${pub.year}},\n`;
+                }
+                if (pub.url) {
+                    bibEntry += `  url          = {${pub.url}},\n`;
+                }
+                if (pub.doi) {
+                    bibEntry += `  doi          = {${pub.doi}},\n`;
+                }
+                if (pub.eprinttype) {
+                    bibEntry += `  eprinttype   = {${pub.eprinttype}},\n`;
+                }
+                if (pub.eprint) {
+                    bibEntry += `  eprint       = {${pub.eprint}},\n`;
+                }
+                if (pub.timestamp) {
+                    bibEntry += `  timestamp    = {${pub.timestamp}},\n`;
+                }
+                if (pub.biburl) {
+                    bibEntry += `  biburl       = {${pub.biburl}},\n`;
+                }
+                if (pub.bibsource) {
+                    bibEntry += `  bibsource    = {${pub.bibsource}},\n`;
+                }
+                bibEntry += '}\n\n';
+
+                bibContent += bibEntry; // Append this entry to the full content
+            });
+
+            // Create a Blob with the BibTeX content
+            const blob = new Blob([bibContent], { type: 'text/plain;charset=utf-8' });
+
+            // Create a link element to trigger the download
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'Publications.bib';
+
+            // Trigger the download
+            link.click();
+            URL.revokeObjectURL(link.href);
+        } catch (error) {
+            console.error('Error exporting to .bib:', error);
+            this.showError('Error exporting to .bib. Please try again later.');
+        }
+    }
 
     showLoading(show) {
         const loader = document.getElementById('loadingIndicator');

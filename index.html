@@ -14,8 +14,7 @@
         <h1>Research Publications</h1>
 
         <div class="search-container">
-            <input type="text" id="authorName" placeholder="Enter Researcher Name / Research Paper Title"
-                aria-label="Researcher name" />
+            <input type="text" id="authorName" placeholder="Enter Researcher Name" aria-label="Researcher name" />
             <button id="fetchPublications">Search</button>
         </div>
 
@@ -46,13 +45,17 @@
                     <option value="asc">Ascending</option>
                 </select>
             </div>
+
         </div>
-        <select id="exportDropdown">
-            <option value="" disabled selected>Choose an option</option>
-            <option value="pdf">PDF</option>
-            <option value="bib">BibTeX</option>
-        </select>
-        <button id="exportButton">Export</button>
+
+        <div class="downloadOptions">
+            <label for="sortBy">Export As:</label>
+            <select id="exportDropdown">
+                <option value="pdf">PDF</option>
+                <option value="bib">BibTeX</option>
+            </select>
+            <button id="exportButton">Export</button>
+        </div>
 
         <div id="loadingIndicator" class="loading">Loading publications...</div>
         <div id="errorMessage" class="error-message"></div>
