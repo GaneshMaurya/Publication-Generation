@@ -16,7 +16,7 @@ class PublicationManager {
             if (e.key === 'Enter') this.fetchPublications();
         });
 
-        ['groupBy', 'filterYear', 'sortBy', 'sortOrder','itemsPerPage'].forEach(id => {
+        ['groupBy', 'filterYear', 'sortBy', 'sortOrder', 'itemsPerPage'].forEach(id => {
             document.getElementById(id).addEventListener('change', () => this.updateDisplay());
         });
         document.getElementById('exportButton').addEventListener('click', () => {
@@ -62,7 +62,9 @@ class PublicationManager {
             const data = await response.json();
 
             if (!data.result.hits.hit || data.result.hits.hit.length === 0) {
-                this.showError('No publications found for this researcher');
+                // this.showError('No publications found for this researcher');
+                this.showError(`No publications found for the exact author name "${document.getElementById('authorName').value.trim()}". 
+            Try checking the exact name spelling.`);
                 this.allPublications = [];
                 this.filteredPublications = [];
 
@@ -110,7 +112,7 @@ class PublicationManager {
 
         if (matchedPublications.length === 0) {
             this.showError(`No publications found for the exact author name "${document.getElementById('authorName').value.trim()}". 
-            Try checking the exact name spelling or use partial name search.`);
+            Try checking the exact name spelling.`);
             this.destroyChart();
         }
         else {
@@ -256,12 +258,9 @@ class PublicationManager {
 
     formatPublicationType(type) {
         const types = {
-            'article': 'Journal Articles',
-            'inproceedings': 'Conference Papers',
-            'book': 'Books',
-            'incollection': 'Book Chapters',
-            'phdthesis': 'PhD Theses',
-            'mastersthesis': 'Master\'s Theses'
+            'Journal Articles': 'Journal Articles',
+            'Conference and Workshop Papers': 'Conference and Workshop Papers',
+            'Informal and Other Publications': 'Informal and Other Publications'
         };
         return types[type] || 'Other Publications';
     }
