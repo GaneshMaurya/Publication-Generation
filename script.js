@@ -18,6 +18,17 @@ class PublicationManager {
         ['groupBy', 'filterYear', 'sortBy', 'sortOrder'].forEach(id => {
             document.getElementById(id).addEventListener('change', () => this.updateDisplay());
         });
+        document.getElementById('exportButton').addEventListener('click', () => {
+            const exportType = document.getElementById('exportDropdown').value;
+        
+            if (exportType === 'pdf') {
+                this.exportToPDF();
+            } else if (exportType === 'bib') {
+                this.exportToBib();
+            } else {
+                alert('Please select a valid export option.');
+            }
+        });
     }
 
     async fetchPublications() {
@@ -547,6 +558,63 @@ class PublicationManager {
         }
         container.appendChild(button);
     }
+
+    exportToPDF() {
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+    
+            let y = 10;
+            let currentGroup = '';
+    
+            this.filteredPublications.forEach(pub => {
+                if (pub.isGroupHeader) {
+                    currentGroup = pub.value;
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(12);
+                    doc.text(currentGroup, 10, y);
+                    y += 10; 
+                } else {
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(10);
+
+                    doc.text(`Title: ${pub.title}`, 10, y);
+                    y += 6;
+                    doc.text(`Authors: ${pub.authors.join(', ')}`, 10, y);
+                    y += 6;
+                    doc.text(`Year: ${pub.year || 'N/A'}`, 10, y);
+                    y += 6;
+
+                    doc.text(`Type: ${this.formatPublicationType(pub.type)}`, 10, y);
+                    y += 6;
+
+                    if (pub.venue) {
+                        doc.text(`Venue: ${pub.venue}`, 10, y);
+                        y += 6;
+                    }
+    
+                    if (pub.doi) {
+                        const doiURL = `https://doi.org/${pub.doi}`;
+                        doc.setTextColor(0, 0, 255); 
+                        doc.textWithLink(`DOI: ${pub.doi}`, 10, y, { url: doiURL });
+                        doc.setTextColor(0, 0, 0);
+                        y += 10; 
+                    }
+    
+                    y += 4; 
+                    if (y > 270) {
+                        doc.addPage();
+                        y = 10; 
+                    }
+                }
+            });
+            doc.save('Publications.pdf');
+        } catch (error) {
+            console.error('Error exporting to PDF:', error);
+            this.showError('Error exporting to PDF. Please try again later.');
+        }
+    }
+
 
     showLoading(show) {
         const loader = document.getElementById('loadingIndicator');

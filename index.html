@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Researcher Publications</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
 </head>
 
 <body>
@@ -46,6 +47,12 @@
                 </select>
             </div>
         </div>
+        <select id="exportDropdown">
+            <option value="" disabled selected>Choose an option</option>
+            <option value="pdf">PDF</option>
+            <option value="bib">BibTeX</option>
+        </select>
+        <button id="exportButton">Export</button>
 
         <div id="loadingIndicator" class="loading">Loading publications...</div>
         <div id="errorMessage" class="error-message"></div>
