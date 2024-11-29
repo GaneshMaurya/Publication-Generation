@@ -59,7 +59,9 @@ class PublicationManager {
     }
 
     parsePublications(data) {
-        return data.result.hits.hit
+        const authorName = document.getElementById('authorName').value.trim().toLowerCase();
+
+        const matchedPublications = data.result.hits.hit
             .map(hit => ({
                 title: hit.info.title,
                 authors: Array.isArray(hit.info.authors?.author)
@@ -70,7 +72,21 @@ class PublicationManager {
                 venue: hit.info.venue || '',
                 doi: hit.info.doi || ''
             }))
-            .filter(pub => pub.year && pub.year <= this.currentYear);
+            .filter(pub => {
+                return pub.year &&
+                    pub.year <= this.currentYear &&
+                    pub.authors.some(author =>
+                        author.toLowerCase().trim() === authorName
+                    );
+            });
+
+        // If no publications matched, show a user-friendly message
+        if (matchedPublications.length === 0) {
+            this.showError(`No publications found for the exact author name "${document.getElementById('authorName').value.trim()}". 
+            Try checking the exact name spelling`);
+        }
+
+        return matchedPublications;
     }
 
     sortPublications() {
@@ -171,12 +187,12 @@ class PublicationManager {
 
     createPublicationItem(pub) {
         const item = document.createElement('div');
-        const highlightedAuthors = this.highlightSearch(pub.authors.join(', '))
+        const highlightedTitle = pub.title;
+        const highlightedAuthors = pub.authors.join(', ');
 
         item.className = 'publication-item';
-        
         item.innerHTML = `
-            <h3>${pub.title}</h3>
+            <h3>${highlightedTitle}</h3>
             <p><strong>Authors:</strong> ${highlightedAuthors}</p>
             <p><strong>Year:</strong> ${pub.year || 'N/A'}</p>
             <p><strong>Type:</strong> ${this.formatPublicationType(pub.type)}</p>
@@ -185,21 +201,13 @@ class PublicationManager {
         `;
         return item;
     }
-    
-    highlightSearch(content) {
-        const queryString = document.getElementById('authorName').value.trim();
-        const queryWords = queryString.split(/\s+/);
-        const regex = new RegExp(`\\b(${queryWords.join('|')})\\b`, 'gi');
-        const highlightedText = content.replace(regex, '<span class="highlight">$1</span>');
-        return highlightedText
-    }
 
     setupPagination() {
         const pagination = document.getElementById('pagination');
         pagination.innerHTML = '';
 
         const totalPages = Math.ceil(this.filteredPublications.length / this.itemsPerPage);
-        
+
         if (totalPages <= 1) return;
 
         this.addPaginationButton(pagination, '«', this.currentPage > 1, () => {
@@ -237,13 +245,13 @@ class PublicationManager {
     }
 
     shouldShowPageNumber(page, totalPages) {
-        return page === 1 || page === totalPages || 
-               (page >= this.currentPage - 1 && page <= this.currentPage + 1);
+        return page === 1 || page === totalPages ||
+            (page >= this.currentPage - 1 && page <= this.currentPage + 1);
     }
 
     shouldShowEllipsis(page, totalPages) {
-        return (page === 2 && this.currentPage > 4) || 
-               (page === totalPages - 1 && this.currentPage < totalPages - 3);
+        return (page === 2 && this.currentPage > 4) ||
+            (page === totalPages - 1 && this.currentPage < totalPages - 3);
     }
 
     addPaginationButton(container, text, enabled, onClick, isActive = false) {
