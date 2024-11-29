@@ -164,26 +164,30 @@ class PublicationManager {
         this.setupPagination();
     }
 
-    displayPublications() {
+    async displayPublications() {
         const list = document.getElementById('publicationList');
         list.innerHTML = '';
-
+    
         if (this.filteredPublications.length === 0) {
             list.innerHTML = '<div class="error-message">No publications match the current filters</div>';
             return;
         }
-
+    
         const startIndex = (this.currentPage - 1) * this.itemsPerPage;
         const endIndex = startIndex + this.itemsPerPage;
         const pagePublications = this.filteredPublications.slice(startIndex, endIndex);
+    
+        const publicationItems = await Promise.all(
+            pagePublications.map(async (pub) => {
+                if (pub.isGroupHeader) {
+                    return this.createGroupHeader(pub.value);
+                } else {
+                    return this.createPublicationItem(pub);
+                }
+            })
+        );
 
-        pagePublications.forEach(pub => {
-            if (pub.isGroupHeader) {
-                list.appendChild(this.createGroupHeader(pub.value));
-            } else {
-                list.appendChild(this.createPublicationItem(pub));
-            }
-        });
+        publicationItems.forEach(item => list.appendChild(item));
     }
 
     createGroupHeader(value) {
@@ -193,21 +197,161 @@ class PublicationManager {
         return header;
     }
 
-    createPublicationItem(pub) {
-        const item = document.createElement('div');
-        const highlightedTitle = pub.title;
-        const highlightedAuthors = pub.authors.join(', ');
+    async getAuthorProfileURL(authorName) {
+        try {
+            this.debug('Fetching profile URL for author:', authorName);
+    
+            // Check cache first
+            if (this.authorUrlCache?.has(authorName)) {
+                this.debug('Cache hit for author:', authorName);
+                return this.authorUrlCache.get(authorName);
+            }
+    
+            const url = `https://dblp.org/search/author/api?q=${encodeURIComponent(authorName)}&format=json&h=10`;
+            this.debug('API Request URL:', url);
+    
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+    
+            const data = await response.json();
+            this.debug('API Response:', data);
+    
+            let profileUrl;
+            if (data.result.hits.hit && data.result.hits.hit.length > 0) {
+                // Try to find exact match using more strict comparison
+                const exactMatch = data.result.hits.hit.find(hit => {
+                    const hitAuthorName = hit.info.author;
+               
+                    return (
+                        hitAuthorName === authorName ||
+                        hitAuthorName.toLowerCase() === authorName.toLowerCase() ||
+                        this.normalizeAuthorName(hitAuthorName) === this.normalizeAuthorName(authorName)
+                    );
+                });
+    
+                if (exactMatch) {
+                    this.debug('Found exact match for author:', authorName);
+                    profileUrl = exactMatch.info.url;
+                } else {
+                    const partialMatch = data.result.hits.hit.find(hit => {
+                        const hitAuthorName = hit.info.author;
+                        return this.matchAuthorWithInitials(hitAuthorName, authorName);
+                    });
+    
+                    if (partialMatch) {
+                        this.debug('Found partial match for author:', authorName);
+                        profileUrl = partialMatch.info.url;
+                    } else {
+                        this.debug('Using search URL as fallback for author:', authorName);
+                        profileUrl = `https://dblp.org/search/author?q=${encodeURIComponent(authorName)}`;
+                    }
+                }
+            } else {
+                this.debug('No hits found for author:', authorName);
+                profileUrl = `https://dblp.org/search/author?q=${encodeURIComponent(authorName)}`;
+            }
+    
+            // Caching the result
+            if (!this.authorUrlCache) {
+                this.authorUrlCache = new Map();
+            }
+            this.authorUrlCache.set(authorName, profileUrl);
+            this.debug('Cached profile URL for author:', authorName, profileUrl);
+    
+            return profileUrl;
+    
+        } catch (error) {
+            this.debug('Error fetching author profile:', error);
+            return `https://dblp.org/search/author?q=${encodeURIComponent(authorName)}`;
+        }
+    }
 
+    normalizeAuthorName(name) {
+        return name.trim().toLowerCase()
+            .replace(/\s*\.\s*/g, ' ')
+            .replace(/\s+/g, ' ');
+    }
+    
+    matchAuthorWithInitials(name1, name2) {
+        const norm1 = this.normalizeAuthorName(name1);
+        const norm2 = this.normalizeAuthorName(name2);
+        const parts1 = norm1.split(' ');
+        const parts2 = norm2.split(' ');
+
+        if (parts1[parts1.length - 1] !== parts2[parts2.length - 1]) {
+            return false;
+        }
+    
+        const initials1 = parts1.slice(0, -1).map(part => part[0]);
+        const initials2 = parts2.slice(0, -1).map(part => part[0]);
+    
+        return initials1.join('') === initials2.join('');
+    }
+
+    debug(...args) {
+        if (this.debugMode && console && console.log) {
+            console.log('[PublicationManager]:', ...args);
+        }
+    }
+
+    async createPublicationItem(pub) {
+        const item = document.createElement('div');
+        const highlightedTitle = this.highlightSearch(pub.title);
+        
+        // Creating promises for authors
+        const authorLinksPromises = pub.authors.map(async (author) => {
+            const link = document.createElement('a');
+            link.textContent = author;
+            link.className = 'author-link loading';
+            
+            try {
+                const profileUrl = await this.getAuthorProfileURL(author);
+                link.href = profileUrl;
+                link.target = "_blank";
+                link.className = 'author-link';
+                return link.outerHTML;
+            } catch (error) {
+                console.error(`Error creating author link for ${author}:`, error);
+                return `<span class="author-link error">${author}</span>`;
+            }
+        });
+    
+        // Waiting for all authorslinks
+        const authorsHTML = await Promise.all(authorLinksPromises).then(links => links.join(', '));
+    
         item.className = 'publication-item';
         item.innerHTML = `
             <h3>${highlightedTitle}</h3>
-            <p><strong>Authors:</strong> ${highlightedAuthors}</p>
+            <p><strong>Authors:</strong> ${authorsHTML}</p>
             <p><strong>Year:</strong> ${pub.year || 'N/A'}</p>
             <p><strong>Type:</strong> ${this.formatPublicationType(pub.type)}</p>
             ${pub.venue ? `<p><strong>Venue:</strong> ${pub.venue}</p>` : ''}
             ${pub.doi ? `<p><strong>DOI:</strong> <a href="https://doi.org/${pub.doi}" target="_blank">${pub.doi}</a></p>` : ''}
         `;
         return item;
+    }
+
+    highlightSearch(content) {
+        const searchName = document.getElementById('authorName').value.trim();
+        if (!searchName) return content;
+        const escapedSearchName = searchName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`\\b(${escapedSearchName})\\b`, 'gi');
+        const parts = searchName.split(/\s+/);
+        const highlightedText = content.replace(regex, '<span class="highlight">$1</span>');
+        if (parts.some(part => part.endsWith('.'))) {
+            const initialsPattern = parts.map(part => {
+                if (part.endsWith('.')) {
+                    return `${part}?\\s*`;
+                }
+                return `\\b${part}\\b`;
+            }).join('\\s*');   
+            const initialsRegex = new RegExp(initialsPattern, 'gi');
+            return content.replace(initialsRegex, match => `<span class="highlight">${match}</span>`);
+        }
+    
+        return highlightedText;
     }
 
     setupPagination() {
