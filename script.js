@@ -5,6 +5,7 @@ class PublicationManager {
         this.itemsPerPage = 10;
         this.currentPage = 1;
         this.currentYear = new Date().getFullYear();
+        this.myChartInstance = null;
         this.setupEventListeners();
     }
 
@@ -43,6 +44,11 @@ class PublicationManager {
                 this.showError('No publications found for this researcher');
                 this.allPublications = [];
                 this.filteredPublications = [];
+
+                if (this.myChartInstance) {
+                    this.myChartInstance.destroy();
+                    this.myChartInstance = null;
+                }
             } else {
                 this.allPublications = this.parsePublications(data);
                 this.filteredPublications = [...this.allPublications];
@@ -82,9 +88,91 @@ class PublicationManager {
         if (matchedPublications.length === 0) {
             this.showError(`No publications found for the exact author name "${document.getElementById('authorName').value.trim()}". 
             Try checking the exact name spelling or use partial name search.`);
+            this.destroyChart();
+        }
+        else {
+            this.createPublicationsPerYearChart(matchedPublications);
         }
 
         return matchedPublications;
+    }
+
+    calculatePublicationsPerYear(matchedPublications) {
+        const yearCountMap = new Map();
+        matchedPublications.forEach(pub => {
+            if (pub.year) {
+                yearCountMap.set(pub.year, (yearCountMap.get(pub.year) || 0) + 1);
+            }
+        });
+
+        const sortedYears = Array.from(yearCountMap.keys()).sort((a, b) => a - b);
+        return {
+            years: sortedYears,
+            counts: sortedYears.map(year => yearCountMap.get(year))
+        };
+    }
+
+    destroyChart() {
+        if (this.myChartInstance) {
+            this.myChartInstance.destroy();
+        }
+    }
+
+    createPublicationsPerYearChart(matchedPublications) {
+        const publicationsData = this.calculatePublicationsPerYear(matchedPublications);
+
+        if (this.myChartInstance) {
+            this.myChartInstance.destroy();
+        }
+
+        const ctx = document.getElementById('publicationsChart').getContext('2d');
+        this.myChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: publicationsData.years,
+                datasets: [{
+                    label: 'Publications per Year',
+                    data: publicationsData.counts,
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        },
+                        title: {
+                            display: true,
+                            text: 'Number of Publications'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Year'
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Publications Distribution by Year',
+                        font: {
+                            size: 16
+                        }
+                    },
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
     }
 
     applyFilters() {
@@ -167,16 +255,16 @@ class PublicationManager {
     async displayPublications() {
         const list = document.getElementById('publicationList');
         list.innerHTML = '';
-    
+
         if (this.filteredPublications.length === 0) {
             list.innerHTML = '<div class="error-message">No publications match the current filters</div>';
             return;
         }
-    
+
         const startIndex = (this.currentPage - 1) * this.itemsPerPage;
         const endIndex = startIndex + this.itemsPerPage;
         const pagePublications = this.filteredPublications.slice(startIndex, endIndex);
-    
+
         const publicationItems = await Promise.all(
             pagePublications.map(async (pub) => {
                 if (pub.isGroupHeader) {
@@ -200,37 +288,35 @@ class PublicationManager {
     async getAuthorProfileURL(authorName) {
         try {
             this.debug('Fetching profile URL for author:', authorName);
-    
-            // Check cache first
+
             if (this.authorUrlCache?.has(authorName)) {
                 this.debug('Cache hit for author:', authorName);
                 return this.authorUrlCache.get(authorName);
             }
-    
+
             const url = `https://dblp.org/search/author/api?q=${encodeURIComponent(authorName)}&format=json&h=10`;
             this.debug('API Request URL:', url);
-    
+
             const response = await fetch(url);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-    
+
             const data = await response.json();
             this.debug('API Response:', data);
-    
+
             let profileUrl;
             if (data.result.hits.hit && data.result.hits.hit.length > 0) {
-                // Try to find exact match using more strict comparison
                 const exactMatch = data.result.hits.hit.find(hit => {
                     const hitAuthorName = hit.info.author;
-               
+
                     return (
                         hitAuthorName === authorName ||
                         hitAuthorName.toLowerCase() === authorName.toLowerCase() ||
                         this.normalizeAuthorName(hitAuthorName) === this.normalizeAuthorName(authorName)
                     );
                 });
-    
+
                 if (exactMatch) {
                     this.debug('Found exact match for author:', authorName);
                     profileUrl = exactMatch.info.url;
@@ -239,7 +325,7 @@ class PublicationManager {
                         const hitAuthorName = hit.info.author;
                         return this.matchAuthorWithInitials(hitAuthorName, authorName);
                     });
-    
+
                     if (partialMatch) {
                         this.debug('Found partial match for author:', authorName);
                         profileUrl = partialMatch.info.url;
@@ -252,16 +338,15 @@ class PublicationManager {
                 this.debug('No hits found for author:', authorName);
                 profileUrl = `https://dblp.org/search/author?q=${encodeURIComponent(authorName)}`;
             }
-    
-            // Caching the result
+
             if (!this.authorUrlCache) {
                 this.authorUrlCache = new Map();
             }
             this.authorUrlCache.set(authorName, profileUrl);
             this.debug('Cached profile URL for author:', authorName, profileUrl);
-    
+
             return profileUrl;
-    
+
         } catch (error) {
             this.debug('Error fetching author profile:', error);
             return `https://dblp.org/search/author?q=${encodeURIComponent(authorName)}`;
@@ -273,7 +358,7 @@ class PublicationManager {
             .replace(/\s*\.\s*/g, ' ')
             .replace(/\s+/g, ' ');
     }
-    
+
     matchAuthorWithInitials(name1, name2) {
         const norm1 = this.normalizeAuthorName(name1);
         const norm2 = this.normalizeAuthorName(name2);
@@ -283,10 +368,10 @@ class PublicationManager {
         if (parts1[parts1.length - 1] !== parts2[parts2.length - 1]) {
             return false;
         }
-    
+
         const initials1 = parts1.slice(0, -1).map(part => part[0]);
         const initials2 = parts2.slice(0, -1).map(part => part[0]);
-    
+
         return initials1.join('') === initials2.join('');
     }
 
@@ -299,13 +384,12 @@ class PublicationManager {
     async createPublicationItem(pub) {
         const item = document.createElement('div');
         const highlightedTitle = this.highlightSearch(pub.title);
-        
-        // Creating promises for authors
+
         const authorLinksPromises = pub.authors.map(async (author) => {
             const link = document.createElement('a');
             link.textContent = author;
             link.className = 'author-link loading';
-            
+
             try {
                 const profileUrl = await this.getAuthorProfileURL(author);
                 link.href = profileUrl;
@@ -317,10 +401,9 @@ class PublicationManager {
                 return `<span class="author-link error">${author}</span>`;
             }
         });
-    
-        // Waiting for all authorslinks
+
         const authorsHTML = await Promise.all(authorLinksPromises).then(links => links.join(', '));
-    
+
         item.className = 'publication-item';
         item.innerHTML = `
             <h3>${highlightedTitle}</h3>
@@ -346,11 +429,11 @@ class PublicationManager {
                     return `${part}?\\s*`;
                 }
                 return `\\b${part}\\b`;
-            }).join('\\s*');   
+            }).join('\\s*');
             const initialsRegex = new RegExp(initialsPattern, 'gi');
             return content.replace(initialsRegex, match => `<span class="highlight">${match}</span>`);
         }
-    
+
         return highlightedText;
     }
 

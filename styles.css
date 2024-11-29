@@ -107,7 +107,8 @@ h1::after {
     align-items: center;
 }
 
-select, input {
+select,
+input {
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 6px;
@@ -115,7 +116,8 @@ select, input {
     transition: border-color 0.3s;
 }
 
-select:focus, input:focus {
+select:focus,
+input:focus {
     border-color: #007bff;
     outline: none;
 }
@@ -162,5 +164,50 @@ select:focus, input:focus {
     font-weight: bold;
     font-style: italic;
     text-decoration: underline;
-    color:darkblue;
+    color: darkblue;
+}
+
+.publication-year-chart {
+    width: 100%;
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.publication-year-chart svg rect {
+    transition: fill 0.3s ease;
+}
+
+.publication-year-chart svg rect:hover {
+    fill: #2980b9;
+}
+
+#publicationsPerYearChart {
+    width: 100%;
+    height: 400px;
+}
+
+@media screen and (max-width: 768px) {
+    #publicationsPerYearChart {
+        height: 300px;
+    }
+}
+
+.chart-container {
+    width: 100%;
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 15px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+canvas#publicationsChart {
+    width: 100% !important;
+    height: 300px !important;
+    margin: 0 auto;
 }
