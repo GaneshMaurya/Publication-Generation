@@ -51,6 +51,7 @@ class PublicationManager {
                 }
             } else {
                 this.allPublications = this.parsePublications(data);
+                this.allPublications = await this.fetchInstitutionInfo(this.allPublications);
                 this.filteredPublications = [...this.allPublications];
             }
 
@@ -75,7 +76,8 @@ class PublicationManager {
                 year: parseInt(hit.info.year) || null,
                 type: hit.info.type || 'unknown',
                 venue: hit.info.venue || '',
-                doi: hit.info.doi || ''
+                doi: hit.info.doi || '',
+                institution: null
             }))
             .filter(pub => {
                 return pub.year &&
@@ -241,6 +243,51 @@ class PublicationManager {
             'mastersthesis': 'Master\'s Theses'
         };
         return types[type] || 'Other Publications';
+    }
+
+    async fetchInstitutionInfo(publications) {
+        const authorNameInput = document.getElementById('authorName').value.trim().toLowerCase();
+
+        // Find the latest publication based on the year
+        const latestPublication = publications
+            .filter(pub => pub.doi && pub.year) // Only consider publications with a DOI and year
+            .sort((a, b) => b.year - a.year)[0]; // Sort by year in descending order and take the latest
+
+        if (!latestPublication) {
+            publications.forEach(pub => (pub.institution = 'No Institution Data Available'));
+            return publications;
+        }
+
+        const doi = latestPublication.doi;
+
+        try {
+            const openAlexUrl = `https://api.openalex.org/works/doi:${doi}`;
+            const response = await fetch(openAlexUrl);
+            const openAlexData = await response.json();
+
+            let institutionName = 'No Institution Data Available';
+
+            if (openAlexData.authorships) {
+                // Match the input author name and extract the institution name
+                const matchingAuthorship = openAlexData.authorships.find(authorship =>
+                    authorship.author?.display_name?.toLowerCase() === authorNameInput
+                );
+
+                institutionName = matchingAuthorship?.institutions[0]?.display_name || institutionName;
+            }
+
+            // Assign the institution name to all publications
+            publications.forEach(pub => {
+                pub.institution = institutionName;
+            });
+        } catch (error) {
+            console.error(`Error fetching data for DOI ${doi}:`, error);
+            // Assign fallback message if API call fails
+            publications.forEach(pub => {
+                pub.institution = 'No Institution Data Available';
+            });
+        }
+        return publications;
     }
 
     updateDisplay() {
@@ -411,6 +458,7 @@ class PublicationManager {
             <p><strong>Year:</strong> ${pub.year || 'N/A'}</p>
             <p><strong>Type:</strong> ${this.formatPublicationType(pub.type)}</p>
             ${pub.venue ? `<p><strong>Venue:</strong> ${pub.venue}</p>` : ''}
+            ${pub.institution ? `<p><strong>Institution:</strong> ${pub.institution}</p>` : ''}
             ${pub.doi ? `<p><strong>DOI:</strong> <a href="https://doi.org/${pub.doi}" target="_blank">${pub.doi}</a></p>` : ''}
         `;
         return item;
