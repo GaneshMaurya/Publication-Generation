@@ -14,7 +14,7 @@ class PublicationManager {
             if (e.key === 'Enter') this.fetchPublications();
         });
 
-        ['groupBy', 'sortBy', 'sortOrder'].forEach(id => {
+        ['groupBy', 'filterYear', 'sortBy', 'sortOrder'].forEach(id => {
             document.getElementById(id).addEventListener('change', () => this.updateDisplay());
         });
     }
@@ -52,7 +52,6 @@ class PublicationManager {
             this.updateDisplay();
         } catch (error) {
             console.error('Error fetching publications:', error);
-            // this.showError('Error fetching publications. Please try again later.');
         } finally {
             this.showLoading(false);
         }
@@ -80,13 +79,21 @@ class PublicationManager {
                     );
             });
 
-        // If no publications matched, show a user-friendly message
         if (matchedPublications.length === 0) {
             this.showError(`No publications found for the exact author name "${document.getElementById('authorName').value.trim()}". 
-            Try checking the exact name spelling`);
+            Try checking the exact name spelling or use partial name search.`);
         }
 
         return matchedPublications;
+    }
+
+    applyFilters() {
+        const filterYear = document.getElementById('filterYear').value;
+
+        this.filteredPublications = this.allPublications.filter(pub => {
+            const yearMatch = !filterYear || pub.year === parseInt(filterYear);
+            return yearMatch;
+        });
     }
 
     sortPublications() {
@@ -150,6 +157,7 @@ class PublicationManager {
 
     updateDisplay() {
         this.filteredPublications = [...this.allPublications];
+        this.applyFilters();
         this.sortPublications();
         this.groupPublications();
         this.displayPublications();
@@ -292,6 +300,6 @@ class PublicationManager {
 
 const manager = new PublicationManager();
 
-//const yearInput = document.getElementById('filterYear');
+const yearInput = document.getElementById('filterYear');
 const debouncedUpdate = manager.debounce(() => manager.updateDisplay(), 300);
-//yearInput.addEventListener('input', debouncedUpdate);
+yearInput.addEventListener('input', debouncedUpdate);
