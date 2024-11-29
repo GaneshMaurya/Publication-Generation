@@ -248,7 +248,6 @@ canvas#publicationsChart {
     transition: all 0.3s ease;
 }
 
-/* Hover effect */
 #exportButton:hover {
     background-color: #0056b3;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -262,4 +261,29 @@ canvas#publicationsChart {
 #exportButton:active {
     background-color: #004085;
     transform: scale(0.98);
+}
+
+.secondRow {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.downloadOptions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+select,
+button,
+label {
+    font-size: 14px;
+}
+
+.listItems {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
 }

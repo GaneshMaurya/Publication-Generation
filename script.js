@@ -7,6 +7,7 @@ class PublicationManager {
         this.currentYear = new Date().getFullYear();
         this.myChartInstance = null;
         this.setupEventListeners();
+        this.setupItemsPerPageListener();
     }
 
     setupEventListeners() {
@@ -15,7 +16,7 @@ class PublicationManager {
             if (e.key === 'Enter') this.fetchPublications();
         });
 
-        ['groupBy', 'filterYear', 'sortBy', 'sortOrder'].forEach(id => {
+        ['groupBy', 'filterYear', 'sortBy', 'sortOrder','itemsPerPage'].forEach(id => {
             document.getElementById(id).addEventListener('change', () => this.updateDisplay());
         });
         document.getElementById('exportButton').addEventListener('click', () => {
@@ -28,6 +29,15 @@ class PublicationManager {
             } else {
                 alert('Please select a valid export option.');
             }
+        });
+    }
+
+    setupItemsPerPageListener() {
+        const itemsPerPageSelect = document.getElementById('itemsPerPage');
+        itemsPerPageSelect.addEventListener('change', () => {
+            this.itemsPerPage = parseInt(itemsPerPageSelect.value);
+            this.currentPage = 1; // Reset to first page
+            this.updateDisplay();
         });
     }
 
@@ -303,6 +313,12 @@ class PublicationManager {
 
     updateDisplay() {
         this.filteredPublications = [...this.allPublications];
+        const yearFilter = document.getElementById('filterYear').value;
+        if (yearFilter) {
+            this.filteredPublications = this.filteredPublications.filter(
+                pub => pub.year === parseInt(yearFilter)
+            );
+        }
         this.applyFilters();
         this.sortPublications();
         this.groupPublications();
